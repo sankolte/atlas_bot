@@ -1,0 +1,1 @@
+// fetchNews.job.js
