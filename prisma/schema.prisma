@@ -1,1 +1,47 @@
-// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(uuid())
+  telegramId  String       @unique
+  createdAt   DateTime     @default(now())
+  preference  Preference?
+  messages    Message[]
+}
+
+model Preference {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occupation         String?
+  interests          Json?
+  industries         Json?
+  briefingTime       String?  // e.g. "08:00" or null for "don't send"
+  onboardingComplete Boolean  @default(false)
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   // "user" | "assistant"
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model NewsItem {
+  id          String   @id @default(uuid())
+  title       String
+  summary     String
+  company     String?
+  category    String?
+  sourceUrl   String   @unique
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+}
