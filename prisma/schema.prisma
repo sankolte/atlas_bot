@@ -22,6 +22,7 @@ model Preference {
   occupation         String?
   interests          Json?
   industries         Json?
+  updateTypes        Json?    // e.g. ["Morning Briefing", "Evening Summary"]
   briefingTime       String?  // e.g. "08:00" or null for "don't send"
   onboardingComplete Boolean  @default(false)
 }
