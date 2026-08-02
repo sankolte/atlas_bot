@@ -35,6 +35,10 @@ export const DEFAULT_UPDATE_TYPE_OPTIONS = [
   '📅 Weekly Digest',
 ];
 
+export const INTEREST_OPTIONS = DEFAULT_INTEREST_OPTIONS;
+export const INDUSTRY_OPTIONS = DEFAULT_INDUSTRY_OPTIONS;
+export const UPDATE_TYPE_OPTIONS = DEFAULT_UPDATE_TYPE_OPTIONS;
+
 export const TIME_OPTIONS = [
   { label: '🌅 8:00 AM', value: '08:00' },
   { label: '☀️ 9:00 AM', value: '09:00' },

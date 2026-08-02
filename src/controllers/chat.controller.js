@@ -1,5 +1,6 @@
 import { getChatResponse } from '../services/ai.service.js';
 import { saveMessage } from '../services/message.service.js';
+import { getMainMenuKeyboard } from '../bot/bot.js';
 
 /**
  * Handle incoming text messages for onboarded users
@@ -28,11 +29,11 @@ export async function handleChatMessage(ctx) {
     // Save assistant reply turn to database
     await saveMessage(userId, 'assistant', aiResponse);
 
-    // Reply to user on Telegram
-    await ctx.replyWithMarkdown(aiResponse).catch(async (err) => {
-      // Fallback if Markdown parsing fails due to special characters
-      console.warn('[ChatController] Markdown formatting error, sending plain text fallback:', err.message);
-      await ctx.reply(aiResponse);
+    // Reply to user on Telegram with HTML parsing and persistent menu bar
+    await ctx.replyWithHTML(aiResponse, getMainMenuKeyboard()).catch(async (err) => {
+      // Fallback if HTML tag parsing fails
+      console.warn('[ChatController] HTML parsing warning, sending fallback:', err.message);
+      await ctx.reply(aiResponse, getMainMenuKeyboard());
     });
   } catch (error) {
     console.error('[ChatController] Error processing chat message:', error);

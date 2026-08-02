@@ -2,6 +2,7 @@ import express from 'express';
 import config from './config/env.js';
 import bot from './bot/bot.js';
 import initNewsFetchJob from './jobs/fetchNews.job.js';
+import initBriefingJob from './jobs/briefing.job.js';
 
 const app = express();
 app.use(express.json());
@@ -15,8 +16,9 @@ const PORT = config.port || 3000;
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
 
-  // Initialize hourly news ingestion cron job
+  // Initialize background cron jobs
   initNewsFetchJob();
+  initBriefingJob();
 
   try {
     await bot.launch();

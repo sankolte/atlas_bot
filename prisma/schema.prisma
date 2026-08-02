@@ -13,6 +13,7 @@ model User {
   createdAt   DateTime     @default(now())
   preference  Preference?
   messages    Message[]
+  feeds       UserFeed[]
 }
 
 model Preference {
@@ -24,7 +25,20 @@ model Preference {
   industries         Json?
   updateTypes        Json?    // e.g. ["Morning Briefing", "Evening Summary"]
   briefingTime       String?  // e.g. "08:00" or null for "don't send"
+  notionApiKey       String?  // User's Notion Integration Secret
+  notionDatabaseId   String?  // User's Notion Database ID
   onboardingComplete Boolean  @default(false)
+}
+
+model UserFeed {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedUrl   String
+  title     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, feedUrl])
 }
 
 model Message {

@@ -17,7 +17,7 @@ function getOpenAIClient() {
 }
 
 /**
- * Build dynamic System Prompt for Atlas AI based on user profile and recent news context
+ * Build dynamic System Prompt for Atlas AI using Telegram HTML formatting rules
  */
 export function buildSystemPrompt(preference, newsItems = []) {
   const occupation = preference?.occupation || 'General User / Investor';
@@ -40,12 +40,12 @@ YOUR USER PROFILE:
 RECENT VERIFIED FINANCIAL NEWS CONTEXT (LAST 3 DAYS):
 ${newsContextString}
 
-CORE INSTRUCTIONS & RESPONSE STYLE:
-1. PERSONALIZATION & RELEVANCE: Always tailor your explanations to a ${occupation} interested in ${interests} and ${industries}.
-2. WHY IT MATTERS: Do not just repeat raw news headers or generic descriptions. Clearly explain "WHY THIS MATTERS" to the user, highlighting market impacts, earnings insights, economic indicators, or industry trends.
-3. CONCISE & ACTIONABLE: Keep responses crisp, structured, and easy to read on mobile Telegram screens. Use bullet points, bold key terms (*term*), and emojis.
-4. NO NOISE: Filter out clickbait or fluff. Provide clear, professional, and insightful financial analysis.
-5. HONESTY: If a user asks about a specific stock/event not in the news context, use your comprehensive financial knowledge base to answer accurately while maintaining your persona.`;
+FORMATTING & RESPONSE RULES (TELEGRAM HTML MODE):
+1. Use Telegram HTML tags for styling: <b>bold</b>, <i>italic</i>, <code>code</code>, and <blockquote>blockquotes for key insights/why it matters</blockquote>.
+2. Use clean visual dividers like: ━━━━━━━━━━━━━━━━━━━━━━━━━ or ─────────────────────────
+3. WHY IT MATTERS: Do not just list news headers. Wrap the "Why This Matters" or key takeaway inside a <blockquote>...</blockquote> blockquote tag.
+4. PERSONALIZATION & RELEVANCE: Always tailor explanations specifically to a ${occupation} interested in ${interests} and ${industries}.
+5. CONCISE & HIGH IMPACT: Keep responses crisp, structured, and easy to skim on mobile screens using bullet points and emojis.`;
 }
 
 /**
@@ -57,19 +57,12 @@ export async function getChatResponse(telegramId, userMessage) {
   try {
     const openai = getOpenAIClient();
 
-    // 1. Fetch user preference
     const preference = await getPreference(telegramId);
-
-    // 2. Fetch recent chat history (last 20 turns)
     const history = await getRecentMessages(telegramId, 20);
-
-    // 3. Fetch recent news items (last 3 days)
     const recentNews = await getRecentNews(3, 15);
 
-    // 4. Construct System Prompt
     const systemPrompt = buildSystemPrompt(preference, recentNews);
 
-    // 5. Construct OpenAI messages payload
     const messages = [
       { role: 'system', content: systemPrompt },
       ...history.map((m) => ({
@@ -79,7 +72,6 @@ export async function getChatResponse(telegramId, userMessage) {
       { role: 'user', content: userMessage },
     ];
 
-    // 6. Call OpenAI API (using fast, cost-effective gpt-4o-mini model)
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages,
@@ -98,7 +90,51 @@ export async function getChatResponse(telegramId, userMessage) {
   }
 }
 
+/**
+ * Generate a personalized briefing for a user based on their preference profile
+ * @param {Object} preference
+ */
+export async function generatePersonalizedBriefing(preference) {
+  try {
+    const openai = getOpenAIClient();
+    const recentNews = await getRecentNews(3, 15);
+
+    const systemPrompt = buildSystemPrompt(preference, recentNews);
+
+    const prompt =
+      `Generate a premium, structured Financial Briefing formatted using Telegram HTML.\n\n` +
+      `Use this exact layout:\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `📊 <b>ATLAS DAILY MARKET BRIEFING</b>\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `🌅 <b>Top Market Highlights</b>\n` +
+      `• Highlight 1...\n` +
+      `• Highlight 2...\n\n` +
+      `<blockquote>⚡ <b>Why This Matters to a ${preference?.occupation || 'Professional'}:</b>\nExplain practical impact...</blockquote>\n\n` +
+      `🎯 <b>Industry Focus (${preference?.industries || 'General'})</b>\n` +
+      `• Industry insight...\n\n` +
+      `─────────────────────────\n` +
+      `<i>Updated for ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • Atlas AI</i>`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 750,
+    });
+
+    return completion.choices[0]?.message?.content || "📊 <b>Atlas Daily Briefing</b>\nNo new briefing updates at this time.";
+  } catch (error) {
+    console.error('[AIService] Error generating personalized briefing:', error);
+    return "📊 <b>Atlas Daily Briefing</b>\n⚠️ Unable to generate briefing at this moment.";
+  }
+}
+
 export default {
   buildSystemPrompt,
   getChatResponse,
+  generatePersonalizedBriefing,
 };

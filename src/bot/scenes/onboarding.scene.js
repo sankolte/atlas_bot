@@ -38,22 +38,6 @@ export const onboardingScene = new Scenes.WizardScene(
       const data = ctx.callbackQuery.data;
       await ctx.answerCbQuery().catch(() => {});
 
-      if (data === 'skip_onboarding') {
-        await upsertPreference(ctx.from.id, { onboardingComplete: true });
-        await ctx.replyWithMarkdown(
-          `⚡ *Skipped for now!*\n\nYou can set up your preferences anytime by typing /start. Feel free to ask me any finance question!`
-        );
-        return ctx.scene.leave();
-      }
-
-      if (data === 'start_onboarding') {
-        await ctx.replyWithMarkdown(
-          `1️⃣ *What do you do?*\n_(Tap a quick option or select Custom to type)_`,
-          getOccupationKeyboard()
-        );
-        return;
-      }
-
       if (data.startsWith('select_occ_')) {
         const idx = parseInt(data.replace('select_occ_', ''), 10);
         const choice = OCCUPATION_OPTIONS[idx];
@@ -320,3 +304,25 @@ export const onboardingScene = new Scenes.WizardScene(
     }
   }
 );
+
+// Global Action Listeners on Onboarding Scene for 100% Reliable Button Taps
+onboardingScene.action('start_onboarding', async (ctx) => {
+  await ctx.answerCbQuery().catch(() => {});
+  ctx.wizard.state.interests = ctx.wizard.state.interests || [];
+  ctx.wizard.state.industries = ctx.wizard.state.industries || [];
+  ctx.wizard.state.updateTypes = ctx.wizard.state.updateTypes || [];
+  ctx.wizard.selectStep(1);
+  await ctx.replyWithMarkdown(
+    `1️⃣ *What do you do?*\n_(Tap a quick option or select Custom to type)_`,
+    getOccupationKeyboard()
+  );
+});
+
+onboardingScene.action('skip_onboarding', async (ctx) => {
+  await ctx.answerCbQuery().catch(() => {});
+  await upsertPreference(ctx.from.id, { onboardingComplete: true });
+  await ctx.replyWithMarkdown(
+    `⚡ *Skipped for now!*\n\nYou can set up your preferences anytime by typing /start. Feel free to ask me any finance question!`
+  );
+  return ctx.scene.leave();
+});

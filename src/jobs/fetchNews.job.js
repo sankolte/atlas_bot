@@ -1,18 +1,19 @@
 import cron from 'node-cron';
 import { fetchLatestNews } from '../services/news.service.js';
+import { fetchAllUserFeeds } from '../services/rss.service.js';
 
 /**
- * Initialize hourly news ingestion cron job
+ * Initialize hourly news & custom RSS feed ingestion cron job
  */
 export function initNewsFetchJob() {
-  console.log('[Cron Job] Initializing hourly news ingestion cron job (0 * * * *)...');
+  console.log('[Cron Job] Initializing hourly news & RSS ingestion cron job (0 * * * *)...');
 
-  // Schedule to run at the start of every hour: '0 * * * *'
   const task = cron.schedule('0 * * * *', async () => {
-    console.log('[Cron Job] Running scheduled hourly financial news fetch...');
+    console.log('[Cron Job] Running scheduled hourly financial news & RSS fetch...');
     try {
       const result = await fetchLatestNews();
-      console.log(`[Cron Job] Completed hourly fetch. Inserted: ${result.inserted} news items.`);
+      const rssInserted = await fetchAllUserFeeds();
+      console.log(`[Cron Job] Completed hourly fetch. Marketaux: ${result.inserted}, RSS: ${rssInserted} items.`);
     } catch (err) {
       console.error('[Cron Job] Error during news fetch job:', err);
     }
@@ -20,8 +21,9 @@ export function initNewsFetchJob() {
 
   // Run immediately on startup once as well
   fetchLatestNews()
-    .then((result) => {
-      console.log(`[Cron Job] Initial startup news fetch complete. Newly inserted: ${result.inserted}`);
+    .then(async (result) => {
+      const rssInserted = await fetchAllUserFeeds().catch(() => 0);
+      console.log(`[Cron Job] Initial startup news fetch complete. Marketaux: ${result.inserted}, RSS: ${rssInserted}`);
     })
     .catch((err) => {
       console.error('[Cron Job] Initial news fetch failed:', err.message);
