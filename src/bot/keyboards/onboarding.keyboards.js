@@ -65,7 +65,7 @@ export function getOccupationKeyboard() {
   for (let i = 0; i < buttons.length; i += 2) {
     rows.push(buttons.slice(i, i + 2));
   }
-
+//hii
   return Markup.inlineKeyboard(rows);
 }
 
