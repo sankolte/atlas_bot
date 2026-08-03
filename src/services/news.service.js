@@ -16,10 +16,11 @@ export async function fetchLatestNews() {
   try {
     const response = await axios.get('https://api.marketaux.com/v1/news/all', {
       params: {
-        api_token: apiKey,
         language: 'en',
+        must_have_entities: true,
         filter_entities: true,
-        limit: 20,
+        limit: 50,
+        api_token: apiKey,
       },
       timeout: 10000,
     });
