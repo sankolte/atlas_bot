@@ -17,17 +17,18 @@ model User {
 }
 
 model Preference {
-  id                 String   @id @default(uuid())
-  userId             String   @unique
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  occupation         String?
-  interests          Json?
-  industries         Json?
-  updateTypes        Json?    // e.g. ["Morning Briefing", "Evening Summary"]
-  briefingTime       String?  // e.g. "08:00" or null for "don't send"
-  notionApiKey       String?  // User's Notion Integration Secret
-  notionDatabaseId   String?  // User's Notion Database ID
-  onboardingComplete Boolean  @default(false)
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occupation           String?
+  interests            Json?
+  industries           Json?
+  updateTypes          Json?     // e.g. ["Morning Briefing", "Evening Summary"]
+  briefingTime         String?   // e.g. "08:00" or null for "don't send"
+  lastBriefingSentDate DateTime? // Date of last sent daily briefing to prevent duplicate sends
+  notionApiKey         String?   // User's Notion Integration Secret
+  notionDatabaseId     String?   // User's Notion Database ID
+  onboardingComplete   Boolean   @default(false)
 }
 
 model UserFeed {

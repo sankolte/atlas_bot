@@ -240,10 +240,20 @@ export const onboardingScene = new Scenes.WizardScene(
     }
   },
 
+function normalizeTimeString(input) {
+  if (!input) return null;
+  const cleaned = input.trim();
+  const match = cleaned.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return cleaned;
+  const hours = match[1].padStart(2, '0');
+  const minutes = match[2].padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
   // --- STEP 5: Briefing Time (Single Select / Custom Time & Save) ---
   async (ctx) => {
     const saveAndFinish = async (rawTime, customTimeStr = null) => {
-      const briefingTime = rawTime === 'none' ? null : (customTimeStr || rawTime);
+      const briefingTime = rawTime === 'none' ? null : normalizeTimeString(customTimeStr || rawTime);
 
       const occupation = ctx.wizard.state.occupation || 'Not specified';
       const interests = ctx.wizard.state.interests || [];
