@@ -8,12 +8,16 @@ import { saveMessage } from '../services/message.service.js';
  * Check and send scheduled daily briefings to users
  */
 export async function sendScheduledBriefings() {
-  const now = new Date();
-  const currentHours = String(now.getHours()).padStart(2, '0');
-  const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-  const currentTimeStr = `${currentHours}:${currentMinutes}`;
+  const tz = process.env.TZ || 'Asia/Kolkata';
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: tz,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const currentTimeStr = formatter.format(new Date());
 
-  console.log(`[Briefing Job] Checking scheduled briefings for current time: ${currentTimeStr}...`);
+  console.log(`[Briefing Job] Checking scheduled briefings for time ${currentTimeStr} (${tz})...`);
 
   try {
     // Find preferences where onboarding is complete and briefingTime is set
@@ -30,7 +34,7 @@ export async function sendScheduledBriefings() {
     for (const pref of preferences) {
       if (!pref.user || !pref.user.telegramId) continue;
 
-      // Check if briefingTime matches (e.g. "08:00", "09:00", "17:00", "19:00" or custom format "HH:mm")
+      // Check if briefingTime matches (e.g. "08:00", "09:00", "16:00", "17:00", "19:00" or custom format "HH:mm")
       if (pref.briefingTime === currentTimeStr) {
         console.log(`[Briefing Job] Triggering personalized briefing for Telegram user: ${pref.user.telegramId}`);
 
@@ -55,12 +59,12 @@ export async function sendScheduledBriefings() {
 }
 
 /**
- * Initialize briefing cron job running every 15 minutes
+ * Initialize briefing cron job running every minute
  */
 export function initBriefingJob() {
-  console.log('[Briefing Job] Initializing scheduled briefing cron job (every 15 min: */15 * * * *)...');
+  console.log('[Briefing Job] Initializing scheduled briefing cron job (every minute: * * * * *)...');
 
-  const task = cron.schedule('*/15 * * * *', async () => {
+  const task = cron.schedule('* * * * *', async () => {
     await sendScheduledBriefings();
   });
 
