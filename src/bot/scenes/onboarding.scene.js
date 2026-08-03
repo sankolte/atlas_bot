@@ -13,6 +13,16 @@ import { upsertPreference } from '../../services/preference.service.js';
 
 export const ONBOARDING_SCENE_ID = 'ONBOARDING_WIZARD';
 
+function normalizeTimeString(input) {
+  if (!input) return null;
+  const cleaned = input.trim();
+  const match = cleaned.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return cleaned;
+  const hours = match[1].padStart(2, '0');
+  const minutes = match[2].padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
 export const onboardingScene = new Scenes.WizardScene(
   ONBOARDING_SCENE_ID,
 
@@ -239,16 +249,6 @@ export const onboardingScene = new Scenes.WizardScene(
       await ctx.reply('Please select your updates using the buttons above and tap "Done ➡️".');
     }
   },
-
-function normalizeTimeString(input) {
-  if (!input) return null;
-  const cleaned = input.trim();
-  const match = cleaned.match(/^(\d{1,2}):(\d{1,2})$/);
-  if (!match) return cleaned;
-  const hours = match[1].padStart(2, '0');
-  const minutes = match[2].padStart(2, '0');
-  return `${hours}:${minutes}`;
-}
 
   // --- STEP 5: Briefing Time (Single Select / Custom Time & Save) ---
   async (ctx) => {
