@@ -3,6 +3,7 @@ import prisma from '../db/prisma.js';
 import bot from '../bot/bot.js';
 import { generatePersonalizedBriefing } from '../services/ai.service.js';
 import { saveMessage } from '../services/message.service.js';
+import { sanitizeTelegramHtml, stripHtml } from '../utils/html.utils.js';
 
 /**
  * Check and send scheduled daily briefings to users
@@ -65,15 +66,16 @@ export async function sendScheduledBriefings() {
           data: { lastBriefingSentDate: new Date() },
         });
 
-        // Generate AI briefing
+        // Generate AI briefing and sanitize HTML for Telegram
         const briefingContent = await generatePersonalizedBriefing(pref);
+        const sanitizedBriefing = sanitizeTelegramHtml(briefingContent);
 
-        // Send briefing message directly to user on Telegram
+        // Send briefing message directly to user on Telegram with HTML parse mode
         await bot.telegram
-          .sendMessage(pref.user.telegramId, briefingContent, { parse_mode: 'Markdown' })
+          .sendMessage(pref.user.telegramId, sanitizedBriefing, { parse_mode: 'HTML' })
           .catch(async (err) => {
-            console.warn('[Briefing Job] Markdown send warning, sending plain text fallback:', err.message);
-            await bot.telegram.sendMessage(pref.user.telegramId, briefingContent);
+            console.warn('[Briefing Job] HTML send warning, sending clean plain text fallback:', err.message);
+            await bot.telegram.sendMessage(pref.user.telegramId, stripHtml(sanitizedBriefing));
           });
 
         // Save assistant briefing to message history database

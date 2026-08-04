@@ -7,6 +7,7 @@ import { generatePersonalizedBriefing } from '../services/ai.service.js';
 import { saveMessage } from '../services/message.service.js';
 import { saveNotionConfig, pushBriefingToNotion } from '../services/notion.service.js';
 import { addUserFeed, getUserFeeds, removeUserFeed } from '../services/rss.service.js';
+import { sanitizeTelegramHtml, stripHtml } from '../utils/html.utils.js';
 
 if (!config.botToken) {
   throw new Error('BOT_TOKEN is missing in environment variables');
@@ -102,9 +103,11 @@ async function handleOnDemandBriefing(ctx) {
     await ctx.replyWithHTML('⚡ <i>Generating your personalized market briefing...</i>');
 
     const briefingText = await generatePersonalizedBriefing(pref);
+    const sanitizedBriefing = sanitizeTelegramHtml(briefingText);
 
-    await ctx.replyWithHTML(briefingText, getMainMenuKeyboard()).catch(async () => {
-      await ctx.reply(briefingText, getMainMenuKeyboard());
+    await ctx.replyWithHTML(sanitizedBriefing, getMainMenuKeyboard()).catch(async (err) => {
+      console.warn('[Bot] HTML send warning for briefing, sending clean fallback:', err.message);
+      await ctx.reply(stripHtml(sanitizedBriefing), getMainMenuKeyboard());
     });
 
     await saveMessage(ctx.from.id, 'assistant', briefingText);

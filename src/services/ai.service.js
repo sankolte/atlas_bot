@@ -45,7 +45,8 @@ FORMATTING & RESPONSE RULES (TELEGRAM HTML MODE):
 2. Use clean visual dividers like: ━━━━━━━━━━━━━━━━━━━━━━━━━ or ─────────────────────────
 3. WHY IT MATTERS: Do not just list news headers. Wrap the "Why This Matters" or key takeaway inside a <blockquote>...</blockquote> blockquote tag.
 4. PERSONALIZATION & RELEVANCE: Always tailor explanations specifically to a ${occupation} interested in ${interests} and ${industries}.
-5. CONCISE & HIGH IMPACT: Keep responses crisp, structured, and easy to skim on mobile screens using bullet points and emojis.`;
+5. CONCISE & HIGH IMPACT: Keep responses crisp, structured, and easy to skim on mobile screens using bullet points and emojis.
+6. CRITICAL HTML RULE: Only output valid Telegram HTML tags (<b>, <i>, <code>, <blockquote>). Do not wrap responses in markdown code blocks (\`\`\`html) and escape raw ampersands as &amp;.`;
 }
 
 /**

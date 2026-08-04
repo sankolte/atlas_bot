@@ -1,6 +1,7 @@
 import { getChatResponse } from '../services/ai.service.js';
 import { saveMessage } from '../services/message.service.js';
 import { getMainMenuKeyboard } from '../bot/bot.js';
+import { sanitizeTelegramHtml, stripHtml } from '../utils/html.utils.js';
 
 /**
  * Handle incoming text messages for onboarded users
@@ -30,10 +31,11 @@ export async function handleChatMessage(ctx) {
     await saveMessage(userId, 'assistant', aiResponse);
 
     // Reply to user on Telegram with HTML parsing and persistent menu bar
-    await ctx.replyWithHTML(aiResponse, getMainMenuKeyboard()).catch(async (err) => {
+    const sanitizedResponse = sanitizeTelegramHtml(aiResponse);
+    await ctx.replyWithHTML(sanitizedResponse, getMainMenuKeyboard()).catch(async (err) => {
       // Fallback if HTML tag parsing fails
-      console.warn('[ChatController] HTML parsing warning, sending fallback:', err.message);
-      await ctx.reply(aiResponse, getMainMenuKeyboard());
+      console.warn('[ChatController] HTML parsing warning, sending clean fallback:', err.message);
+      await ctx.reply(stripHtml(sanitizedResponse), getMainMenuKeyboard());
     });
   } catch (error) {
     console.error('[ChatController] Error processing chat message:', error);
