@@ -29,6 +29,9 @@ export async function upsertPreference(telegramId, data) {
     create: { telegramId: strId },
   });
 
+  const existingPref = await prisma.preference.findUnique({ where: { userId: user.id } });
+  const resetLastSent = data.briefingTime !== undefined && existingPref && existingPref.briefingTime !== data.briefingTime;
+
   // Upsert preference connected to user
   const preference = await prisma.preference.upsert({
     where: { userId: user.id },
@@ -38,6 +41,7 @@ export async function upsertPreference(telegramId, data) {
       industries: data.industries ?? undefined,
       updateTypes: data.updateTypes ?? undefined,
       briefingTime: data.briefingTime !== undefined ? data.briefingTime : undefined,
+      lastBriefingSentDate: resetLastSent ? null : undefined,
       onboardingComplete: data.onboardingComplete ?? true,
     },
     create: {
