@@ -70,13 +70,6 @@ export const onboardingScene = new Scenes.WizardScene(
 
     if (ctx.message && ctx.message.text) {
       const text = ctx.message.text.trim();
-      if (text.startsWith('/')) {
-        if (text === '/skip') {
-          await upsertPreference(ctx.from.id, { onboardingComplete: true });
-          await ctx.replyWithMarkdown('⚡ Skipped onboarding.');
-          return ctx.scene.leave();
-        }
-      }
 
       ctx.wizard.state.occupation = text;
       ctx.wizard.state.awaitingCustom = null;
@@ -250,7 +243,7 @@ export const onboardingScene = new Scenes.WizardScene(
     }
   },
 
-  // --- STEP 5: Briefing Time (Single Select / Custom Time & Save) ---
+// --- STEP 5: Briefing Time (Single Select / Custom Time & Save) ---
   async (ctx) => {
     const saveAndFinish = async (rawTime, customTimeStr = null) => {
       const briefingTime = rawTime === 'none' ? null : normalizeTimeString(customTimeStr || rawTime);
@@ -314,6 +307,42 @@ export const onboardingScene = new Scenes.WizardScene(
     }
   }
 );
+
+// Intercept commands and bottom-menu button taps inside onboarding scene
+onboardingScene.use(async (ctx, next) => {
+  if (ctx.message && ctx.message.text) {
+    const text = ctx.message.text.trim();
+
+    if (text.startsWith('/')) {
+      const command = text.split(/\s+/)[0].toLowerCase();
+
+      if (command === '/start') {
+        return ctx.scene.enter(ONBOARDING_SCENE_ID);
+      }
+
+      if (command === '/skip' || command === '/cancel') {
+        await upsertPreference(ctx.from.id, { onboardingComplete: true });
+        await ctx.replyWithMarkdown(
+          `⚡ *Skipped for now!*\n\nYou can set up your preferences anytime by typing /start. Feel free to ask me any finance question!`
+        );
+        return ctx.scene.leave();
+      }
+
+      // For any other command (/help, /addfeed, /briefing, /preferences, /notion, etc.):
+      // Exit onboarding scene and pass control downstream to bot.js command handlers
+      await ctx.scene.leave();
+      return next();
+    }
+
+    const MENU_BUTTONS = ['📰 Latest Briefing', '⚡ Market Scan', '⚙️ My Preferences', '❓ Help'];
+    if (MENU_BUTTONS.includes(text)) {
+      await ctx.scene.leave();
+      return next();
+    }
+  }
+
+  return next();
+});
 
 // Global Action Listeners on Onboarding Scene for 100% Reliable Button Taps
 onboardingScene.action('start_onboarding', async (ctx) => {
