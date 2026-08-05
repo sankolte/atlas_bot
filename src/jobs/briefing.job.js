@@ -9,7 +9,7 @@ import { sanitizeTelegramHtml, stripHtml } from '../utils/html.utils.js';
  * Check and send scheduled daily briefings to users
  */
 export async function sendScheduledBriefings() {
-  const tz = process.env.TZ || 'Asia/Kolkata';
+  const tz = process.env.TARGET_TIMEZONE || process.env.APP_TZ || (process.env.TZ && process.env.TZ !== 'UTC' ? process.env.TZ : 'Asia/Kolkata');
   const now = new Date();
 
   // Format current time as zero-padded 24h HH:mm (e.g. "16:00")
