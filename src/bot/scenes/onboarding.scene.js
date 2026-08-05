@@ -317,7 +317,19 @@ onboardingScene.use(async (ctx, next) => {
       const command = text.split(/\s+/)[0].toLowerCase();
 
       if (command === '/start') {
-        return ctx.scene.enter(ONBOARDING_SCENE_ID);
+        ctx.wizard.state.interests = [];
+        ctx.wizard.state.industries = [];
+        ctx.wizard.state.updateTypes = [];
+        ctx.wizard.state.awaitingCustom = null;
+        ctx.wizard.selectStep(0);
+
+        const greeting =
+          `👋 *Hi, I'm Atlas!*\n\n` +
+          `I track financial markets, fetch top market news, and send personalized briefings straight to your Telegram.\n\n` +
+          `Let's quickly set up your preferences so I can tailor insights for you!`;
+
+        await ctx.replyWithMarkdown(greeting, getStartKeyboard());
+        return ctx.wizard.next();
       }
 
       if (command === '/skip' || command === '/cancel') {
